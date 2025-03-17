@@ -1,15 +1,15 @@
 const express = require('express');
 
-const app = express ();
+const app = express();
 app.use(express.json());
 
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 
 app.listen(PORT, () => {
-    console.log("Server Listening on PORT:", port);
+    console.log("Server Listening on PORT:", PORT);
   });
 
-const { BookModel} = require('./models');
+
 
 const books = [];
 let nextId = 1;
@@ -23,45 +23,49 @@ app.get('/books', (request, response) => {
     response.json(books);
 });
 
-app.get('books/:id', (request, response) => {
+app.get('/books/:id', (request, response) => {
     const book = books.find(Book => Book.id === parseInt(request.params.id));
     if(!book) {return response.status(404).send('Book not found');}
     response.json(book);
 });
 
-app.post('/books', (req, res) => {
-    const { title, details } = req.body;
-    if (!title || !Array.isArray(details) || details.length === 0) {
-      return res.status(400).send('Title and at least one detail are required');
-    }
-  
+app.post('/books', (request, response) => {
+  console.log('Request body:', request.body);  // Log the request body for debugging
 
-    details.forEach(detail => {
+  const { title, details } = request.body;
+
+  if (!title || !Array.isArray(details) || details.length === 0) {
+      return response.status(400).send('Title and at least one detail are required');
+  }
+
+  details.forEach(detail => {
       if (!detail.id) {
-        detail.id = nextDetailId++;
+          detail.id = nextDetailId++;
       }
-    });
-  
-    const newBook = {
-      id: nextBookId++,
-      title,
-      details,
-    };
-    books.push(newBook);
-    res.status(201).json(newBook);
   });
 
-  app.put('/books/:id', (req, res) => {
-    const book = books.find(b => b.id === parseInt(req.params.id));
-    if (!book) return res.status(404).send('Book not found');
+  const newBook = {
+      id: nextId++,  
+      title,
+      details,
+  };
+
+  console.log('New book:', newBook);  // Log the new book for debugging
+
+  books.push(newBook);
+  response.status(201).json(newBook);
+});
+
+
+  app.put('/books/:id', (request, response) => {
+    const book = books.find(Book => Book.id === parseInt(request.params.id));
+    if (!book) return response.status(404).send('Book not found');
   
-    const { title, details } = req.body;
+    const { title, details } = request.body;
     book.title = title || book.title;
   
-    // Update the details if provided
     if (Array.isArray(details) && details.length > 0) {
       details.forEach(detail => {
-        // If a detail does not have an id, assign a new one
         if (!detail.id) {
           detail.id = nextDetailId++;
         }
@@ -69,7 +73,7 @@ app.post('/books', (req, res) => {
       book.details = details;
     }
   
-    res.json(book);
+    response.json(book);
   });
 
   app.delete('/books/:id', (request, response) => {
